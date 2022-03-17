@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+
+</head>
+<body>
+<form id="formData">
+    <label for="inputText"></label><input type="text" name="inputText" id="inputText">
+    <input type="button" value="jsAjax" onClick="jsAjax();">
+    <input type="button" value="jqIdAjax" onClick="jqIdAjax();">
+    <input type="button" value="jqFormAjax" onClick="jqFormAjax();">
+    <button type="submit"><span>jqFormAjaxSubmit</span></button>
+    <table id="tableData" border="1"></table>
+</form>
+</body>
+<script>
+    function jsAjax() {
+        document.getElementById("tableData").innerHTML = '';
+        if (window.XMLHttpRequest) {
+            // code for IE7+, Firefox, Chrome, Opera, Safari
+            xmlhttp = new XMLHttpRequest();
+        } else {
+            // code for IE6, IE5
+            xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+        }
+        xmlhttp.onreadystatechange = function () {
+            if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                var jsonParse = JSON.parse(xmlhttp.responseText);
+                if (jsonParse.success == false) {
+                    document.getElementById("tableData").innerHTML = '<tr><td>Error</td></tr>';
+                } else {
+                    var jsonParseData = jsonParse.data;
+                    var str = '<tr><td>id</td><td>filename</td></tr>';
+                    for (jsonParseDataKey in jsonParseData) {
+                        str += '<tr><td>' + jsonParseData[jsonParseDataKey]['id'] + '</td><td>' + jsonParseData[jsonParseDataKey]['filename'] + '</td></tr>';
+                    }
+                    document.getElementById("tableData").innerHTML = str;
+                }
+            }
+        };
+        let inputText = document.getElementById('inputText').value;
+        xmlhttp.open("GET", "../controller/index.php?method=jsAjax&inputText=" + inputText, true);
+        xmlhttp.send();
+    }
+
+    function jqIdAjax() {
+        $('#tableData').html('');
+        var data = {};
+        data.method = 'jqIdAjax';
+        data.inputText = $('#inputText').val();
+        $.ajax({
+            url: '../controller/index.php',
+            type: 'post',
+            data: data,
+            success: function (json) {
+                jsonParseData = JSON.parse(json);
+                if (jsonParseData.success == false) {
+                    $('#tableData').html('<tr><td>Error</td></tr>');
+                } else {
+                    var jsonParseData = jsonParseData.data;
+                    var str = '<tr><td>id</td><td>filename</td></tr>';
+                    for (jsonParseDataKey in jsonParseData) {
+                        str += '<tr><td>' + jsonParseData[jsonParseDataKey]['id'] + '</td><td>' + jsonParseData[jsonParseDataKey]['filename'] + '</td></tr>';
+                    }
+                    $('#tableData').html(str);
+                }
+            },
+            error: function (xhr) {
+                console.log(xhr.responseText);
+                $('#tableData').html('<tr><td>Error</td></tr>');
+            },
+            complete: function () {
+            }
+        });
+    }
+
+    function jqFormAjax() {
+        $('#tableData').html('');
+        var data = $("#formData").serializeArray()
+        data.push({name: "method", value: "jqFormAjax"});
+        $.ajax({
+            url: '../controller/index.php',
+            data: data,
+            method: 'POST',
+            dataType: 'json'
+        })
+            .done(function (data) {
+                jsonParseData = data;
+                if (jsonParseData.success == false) {
+                    $('#tableData').html('<tr><td>Error</td></tr>');
+                } else {
+                    var jsonParseData = jsonParseData.data;
+                    var str = '<tr><td>id</td><td>filename</td></tr>';
+                    for (jsonParseDataKey in jsonParseData) {
+                        str += '<tr><td>' + jsonParseData[jsonParseDataKey]['id'] + '</td><td>' + jsonParseData[jsonParseDataKey]['filename'] + '</td></tr>';
+                    }
+                    $('#tableData').html(str);
+                }
+            })
+            .fail(function () {
+                $('#tableData').html('<tr><td>Error</td></tr>');
+            })
+            .done(function () {
+
+            })
+    }
+
+    $("#formData").submit(function (e) {
+        $('#tableData').html('');
+        e.preventDefault();
+        var formData = new FormData(this);
+        formData.append('method', 'jqFormAjax');
+        $.ajax({
+            url: '../controller/index.php',
+            type: 'POST',
+            data: formData,
+            cache: false,
+            contentType: false,
+            processData: false
+        }).done(function (data) {
+            jsonParseData = JSON.parse(data);
+            if (jsonParseData.success == false) {
+                $('#tableData').html('<tr><td>Error</td></tr>');
+            } else {
+                var jsonParseData = jsonParseData.data;
+                var str = '<tr><td>id</td><td>filename</td></tr>';
+                for (jsonParseDataKey in jsonParseData) {
+                    str += '<tr><td>' + jsonParseData[jsonParseDataKey]['id'] + '</td><td>' + jsonParseData[jsonParseDataKey]['filename'] + '</td></tr>';
+                }
+                $('#tableData').html(str);
+            }
+        })
+            .fail(function () {
+                $('#tableData').html('<tr><td>Error</td></tr>');
+            })
+            .always(function () {
+            });
+    });
+</script>
+</html>
